@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <title>The Ladder — One Day at a Time</title>
+
+  <meta
+    name="description"
+    content="A personal training and daily routine tracker with run-based XP."
+  >
+  <meta name="theme-color" content="#FFF8EC">
+
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+
+  <script src="./app.js" defer></script>
+</head>
+
+<body>
+  <div class="app">
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="The Ladder home">
+        <img src="./icon.svg" width="54" height="54" alt="">
+        <div>
+          <span class="eyebrow">SMALL STEPS. REAL PROGRESS.</span>
+          <h1>The Ladder</h1>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <button id="editToggle" class="button secondary" type="button">
+          ✏️ Edit
+        </button>
+
+        <button id="themeToggle" class="button secondary" type="button">
+          🌙 Calm
+        </button>
+
+        <button id="backupButton" class="button secondary" type="button">
+          💾 Backup
+        </button>
+      </div>
+    </header>
+
+    <p class="intro">
+      Build your routine, train thoughtfully, and climb one day at a time.
+      A missed day is a pause. Two in a row starts a fresh run.
+    </p>
+
+    <div id="storageWarning" class="notice danger" hidden role="alert"></div>
+
+    <noscript>
+      <div class="notice danger">
+        Please enable JavaScript to use this app.
+      </div>
+    </noscript>
+
+    <main>
+      <section class="dashboard card" aria-label="Your progress">
+        <div class="dashboard-top">
+          <div class="level-group">
+            <div class="level-badge" id="levelNumber">1</div>
+            <div>
+              <span class="eyebrow">CURRENT LEVEL</span>
+              <h2 id="levelTitle">Rookie</h2>
+            </div>
+          </div>
+
+          <span class="status-chip" id="graceChip">
+            🛡 Grace ready
+          </span>
+        </div>
+
+        <div class="xp-labels">
+          <strong id="runXpText">0 run XP</strong>
+          <span id="nextLevelText">100 to Level 2</span>
+        </div>
+
+        <div
+          class="meter"
+          id="levelMeter"
+          role="progressbar"
+          aria-label="Progress to next level"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <div id="levelFill"></div>
+        </div>
+
+        <div class="stat-grid">
+          <div>
+            <span>🔥 Run days</span>
+            <strong id="runDaysText">0</strong>
+          </div>
+          <div>
+            <span>🏆 Best run</span>
+            <strong id="bestRunText">0</strong>
+          </div>
+          <div>
+            <span>✨ Lifetime XP</span>
+            <strong id="lifetimeText">0</strong>
+          </div>
+        </div>
+
+        <div class="daily-status">
+          <h3 id="statusTitle">One day at a time.</h3>
+          <p id="statusDescription"></p>
+
+          <div class="xp-labels">
+            <span id="goalText">Today's goal</span>
+            <strong id="dailyXpText">0 / 150 XP</strong>
+          </div>
+
+          <div
+            class="meter small"
+            id="goalMeter"
+            role="progressbar"
+            aria-label="Today's run survival goal"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <div id="goalFill"></div>
+          </div>
+        </div>
+
+        <div id="weekTrail" class="week-trail" aria-label="Last seven days"></div>
+
+        <details class="game-rules">
+          <summary>How XP and the two-day rule work</summary>
+          <ul>
+            <li>
+              Each completed task earns 10 XP, capped at 100 task XP per day.
+            </li>
+            <li>
+              Complete at least 60% of today's tasks to secure the day:
+              +30 XP. At least three tasks are needed unless your list
+              contains fewer than three.
+            </li>
+            <li>Complete the entire list for another +20 XP.</li>
+            <li>One missed day is allowed.</li>
+            <li>
+              Two consecutive missed days reset current run XP and run days.
+              Lifetime XP, best run, and workout history remain.
+            </li>
+            <li>
+              A day ends at local midnight. Today is never marked missed
+              before it ends.
+            </li>
+            <li>
+              Unticking tasks removes their XP and any bonuses no longer earned.
+              Repeated ticking does not generate extra XP.
+            </li>
+            <li>
+              Run days count secured days, not grace days. A secured day
+              restores your allowance for one consecutive missed day.
+            </li>
+          </ul>
+          <p>
+            This is a personal accountability tool, not a competition.
+            Rest and recovery can be legitimate checklist tasks.
+          </p>
+        </details>
+      </section>
+
+      <nav class="tabs" aria-label="Main sections">
+        <button
+          class="active"
+          type="button"
+          data-tab="checklist"
+          aria-pressed="true"
+        >
+          ✓ Daily routine
+        </button>
+
+        <button type="button" data-tab="program" aria-pressed="false">
+          🪜 Program
+        </button>
+
+        <button type="button" data-tab="logger" aria-pressed="false">
+          🏋️ Workout log
+        </button>
+      </nav>
+
+      <!-- DAILY ROUTINE -->
+
+      <section id="view-checklist" class="view">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">SHOW UP FOR YOURSELF</span>
+            <h2>Daily routine</h2>
+          </div>
+          <span id="todayLabel" class="muted small-text"></span>
+        </div>
+
+        <div class="day-picker" aria-label="Choose checklist">
+          <button type="button" data-day="weekday">Mon–Fri</button>
+          <button type="button" data-day="saturday">Saturday</button>
+          <button type="button" data-day="sunday">Sunday</button>
+        </div>
+
+        <p id="previewNote" class="muted small-text"></p>
+
+        <div class="reminder-banner">
+          <p id="reminderText">
+            Reminders are best-effort while this page is active.
+          </p>
+          <button id="enableReminders" class="button secondary" type="button">
+            Enable reminders
+          </button>
+        </div>
+
+        <div id="checklistTasks"></div>
+
+        <div class="section-actions">
+          <button
+            id="addTaskButton"
+            class="button secondary edit-only"
+            type="button"
+            hidden
+          >
+            + Add task
+          </button>
+
+          <button
+            id="resetChecklistButton"
+            class="button text-button edit-only"
+            type="button"
+            hidden
+          >
+            Reset this list to default
+          </button>
+
+          <button
+            id="clearTicksButton"
+            class="button text-button"
+            type="button"
+          >
+            Clear today's ticks
+          </button>
+        </div>
+      </section>
+
+      <!-- PROGRAM -->
+
+      <section id="view-program" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">24 WEEKS · 6 PHASES</span>
+            <h2>Your training program</h2>
+          </div>
+          <span id="selectedWeekText" class="status-chip"></span>
+        </div>
+
+        <p class="muted small-text">
+          Weeks are a browsing tool, not proof of completed training.
+          Your selected week is saved automatically.
+        </p>
+
+        <div id="weekPicker" class="week-picker"></div>
+        <div id="phasePicker" class="phase-picker"></div>
+
+        <details class="notice health-note">
+          <summary>Back and sciatica care — please read</summary>
+          <p>
+            No exercise is safe for everyone. Use comfortable ranges and
+            individually appropriate loads. Stop if symptoms worsen or spread
+            farther down the leg, and ask a qualified clinician about suitable
+            modifications.
+          </p>
+          <p>
+            New weakness, saddle numbness, or bladder/bowel changes need urgent
+            medical assessment.
+          </p>
+          <p>
+            This is an editable planning template, not an individualized
+            prescription. You do not need to perform every listed exercise in
+            one session. Plan training frequency, rest, and exercise selection
+            around your ability and recovery.
+          </p>
+        </details>
+
+        <div id="phaseRule" class="notice"></div>
+
+        <button
+          id="resetProgramButton"
+          class="button text-button edit-only"
+          type="button"
+          hidden
+        >
+          Reset entire program to default
+        </button>
+
+        <div id="programGroups"></div>
+      </section>
+
+      <!-- WORKOUT LOGGER -->
+
+      <section id="view-logger" class="view" hidden>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">TRACK THE WORK, NOT JUST THE INTENTION</span>
+            <h2>Workout log</h2>
+          </div>
+          <span id="logCount" class="muted small-text">0 entries</span>
+        </div>
+
+        <form id="logForm" class="card log-form">
+          <label>
+            Exercise
+            <select id="logExercise" required></select>
+          </label>
+
+          <label>
+            Weight in kg
+            <input
+              id="logWeight"
+              type="number"
+              min="0"
+              max="2000"
+              step="0.25"
+              placeholder="0 for bodyweight"
+              required
+            >
+          </label>
+
+          <label>
+            Reps or duration
+            <input
+              id="logReps"
+              type="text"
+              maxlength="100"
+              placeholder="12, 10 or 30 seconds"
+              required
+            >
+          </label>
+
+          <button class="button primary" type="submit">
+            Save entry
+          </button>
+        </form>
+
+        <p class="muted small-text">
+          Log weight consistently—for dumbbells, decide whether you record
+          one dumbbell or the combined weight. Log entries do not award XP,
+          so adding duplicate entries cannot inflate your level.
+        </p>
+
+        <label class="filter-label">
+          Filter history
+          <select id="historyFilter">
+            <option value="">All exercises</option>
+          </select>
+        </label>
+
+        <div id="historyList"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Made with 💛 for Anubhav’s climb.</p>
+      <p>
+        Saved in this browser · No account · No automatic cloud sync
+      </p>
+      <p>
+        Export a backup regularly. Clearing browser data can erase your progress.
+      </p>
+    </footer>
+  </div>
+
+  <dialog id="editorDialog" aria-labelledby="dialogTitle">
+    <form id="editorForm">
+      <div class="dialog-heading">
+        <h2 id="dialogTitle">Edit</h2>
+        <button
+          id="closeDialog"
+          class="icon-button"
+          type="button"
+          aria-label="Close dialog"
+        >
+          ✕
+        </button>
+      </div>
+
+      <p id="dialogDescription" class="muted small-text"></p>
+
+      <div id="editorFields" class="editor-fields"></div>
+
+      <div class="dialog-actions">
+        <button id="cancelDialog" class="button secondary" type="button">
+          Cancel
+        </button>
+        <button class="button primary" type="submit">
+          Save
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <input
+    id="importFile"
+    type="file"
+    accept=".json,application/json"
+    hidden
+  >
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+</body>
+</html>

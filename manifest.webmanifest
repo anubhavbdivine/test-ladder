@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "The Ladder — Daily Progress",
+  "short_name": "The Ladder",
+  "description": "A local-first daily routine and training tracker with run-based XP.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF8EC",
+  "theme_color": "#FFF8EC",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
